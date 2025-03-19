@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: feature-optimization-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      config:
+        enabled: true
+        file-extention: yaml
