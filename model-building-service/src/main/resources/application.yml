@@ -7,6 +7,9 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.jdbc.Driver
+  data:
+    mongodb:
+      uri: mongodb://localhost/pest_feature_optimization_data
   cloud:
     nacos:
       discovery:

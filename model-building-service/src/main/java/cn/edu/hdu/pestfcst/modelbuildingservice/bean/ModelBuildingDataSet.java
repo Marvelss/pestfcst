@@ -10,24 +10,56 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.Data;
+
 @Data
-@Entity
-@Table(name = "feature_calculation_data")
+@Document(collection = "feature_calculation_data")
 public class ModelBuildingDataSet {
     @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @Column(name = "lon")
+    private String id; // MongoDB的主键通常是String类型
+
+    @Field(name = "lon")
     private float lon;
-    @Column(name = "lat")
+
+    @Field(name = "lat")
     private float lat;
-    @Column(name = "year")
+
+    @Field(name = "year")
     private int year;
-    @Column(name = "doy")
+
+    @Field(name = "doy")
     private int doy;
-    @Column(name = "temp")
+
+    @Field(name = "temp")
     private float temp;
-    @Column(name = "rain")
+
+    @Field(name = "rain")
     private float rain;
 }
+
+
+
+//@Data
+//@Entity
+//@Table(name = "feature_calculation_data")
+//public class ModelBuildingDataSet {
+//    @Id
+//    @Column(name = "id")
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private long id;
+//    @Column(name = "lon")
+//    private float lon;
+//    @Column(name = "lat")
+//    private float lat;
+//    @Column(name = "year")
+//    private int year;
+//    @Column(name = "doy")
+//    private int doy;
+//    @Column(name = "temp")
+//    private float temp;
+//    @Column(name = "rain")
+//    private float rain;
+//}
