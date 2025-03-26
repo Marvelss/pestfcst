@@ -15,3 +15,7 @@ spring:
           uri: lb://feature-optimization-service
           predicates:
             - Path=/feature-optimization-dataset/**
+        - id: model-building-service
+          uri: lb://model-building-service
+          predicates:
+            - Path=/model-building-dataset/**
