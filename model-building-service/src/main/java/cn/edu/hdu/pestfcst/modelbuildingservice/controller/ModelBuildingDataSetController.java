@@ -7,7 +7,7 @@ package cn.edu.hdu.pestfcst.modelbuildingservice.controller;/*
 
 import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelBuildingDataSet;
 import cn.edu.hdu.pestfcst.modelbuildingservice.service.ModelBuildingDataSetService;
-import cn.edu.hdu.pestfcst.modelbuildingservice.service.impl.KafkaProducerServiceImpl;
+import cn.edu.hdu.pestfcst.modelbuildingservice.stream.KafkaProducerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +25,7 @@ public class ModelBuildingDataSetController {
     private KafkaProducerServiceImpl kafkaProducerService;
 
     @GetMapping("/username/{id}")
-    public String getModelBuildingDataSetById(@PathVariable long id) {
+    public String getModelBuildingDataSetByIdMessage(@PathVariable long id) {
         // 从数据库中获取数据
         ModelBuildingDataSet dataSet = modelBuildingDataSetService.getModelBuildingDataSetByID(id);
 
@@ -40,15 +40,27 @@ public class ModelBuildingDataSetController {
         }
 
         // 发送消息到Kafka
-        kafkaProducerService.sendMessage("test", message);
+        kafkaProducerService.sendMessage("test", new ModelBuildingDataSet());
 
         return "Message sent to Kafka topic: test";
+    }
+
+    @GetMapping("/id/{id}")
+    public String getModelBuildingDataSetById(@PathVariable long id) {
+        // 创建一个PestData对象
+//        ModelBuildingDataSet pestData = new ModelBuildingDataSet();
+        ModelBuildingDataSet pestData = modelBuildingDataSetService.getModelBuildingDataSetByID(id);
+        System.out.println("内容");
+        // 发送数据到Kafka
+        kafkaProducerService.sendMessage("test-topic", pestData);
+
+        return "Message sent to Kafka topic: test-topic";
     }
 
     @GetMapping("/send-message")
     public String sendMessage() {
         String message = "Hello, Kafka!";
-        kafkaProducerService.sendMessage("test", message);
+        kafkaProducerService.sendMessage("test",  new ModelBuildingDataSet());
         return "Message sent to Kafka topic: test";
     }
 }

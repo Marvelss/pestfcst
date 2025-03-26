@@ -12,14 +12,22 @@ import javax.persistence.*;
 
 @Data
 @Entity
-@Table(name = "tb_user")
+@Table(name = "feature_calculation_data")
 public class ModelBuildingDataSet {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "username")
-    private String username;
-    @Column(name = "address")
-    private String address;
+    private long id;
+    @Column(name = "lon")
+    private float lon;
+    @Column(name = "lat")
+    private float lat;
+    @Column(name = "year")
+    private int year;
+    @Column(name = "doy")
+    private int doy;
+    @Column(name = "temp")
+    private float temp;
+    @Column(name = "rain")
+    private float rain;
 }
