@@ -20,7 +20,7 @@ public class KafkaProducerServiceImpl {
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
-    public void sendMessage(String topic, List<ModelBuildingDataSet> message) {
+    public void sendMessage(String topic, ModelBuildingDataSet message) {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString;
         try {

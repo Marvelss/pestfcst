@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -76,17 +77,17 @@ public class ModelBuildingDataSetController {
         return ResponseEntity.ok(dataSets);
     }
 
-//    @GetMapping("/id1/{id}")
-//    public String getModelBuildingDataSetById(@PathVariable String id) {
-//        // 创建一个PestData对象
+    @GetMapping("/id/{id}")
+    public ResponseEntity<ModelBuildingDataSet> getModelBuildingDataSetById(@PathVariable String id) {
+        // 创建一个PestData对象
 //        ModelBuildingDataSet pestData = new ModelBuildingDataSet();
-//        ModelBuildingDataSet pestData = modelBuildingDataSetService.getModelBuildingDataSetByID(id);
-//        System.out.println("内容");
-//        // 发送数据到Kafka
-//        kafkaProducerService.sendMessage("test-topic", pestData);
-//
-//        return "Message sent to Kafka topic: test-topic";
-//    }
+        ModelBuildingDataSet pestData = modelBuildingDataSetService.getModelBuildingDataSetByID(id);
+        // 发送数据到Kafka
+        kafkaProducerService.sendMessage("test-topic", pestData);
+
+        return ResponseEntity.ok(pestData);
+
+    }
 
     @GetMapping("/send-message")
     public String sendMessage() {
