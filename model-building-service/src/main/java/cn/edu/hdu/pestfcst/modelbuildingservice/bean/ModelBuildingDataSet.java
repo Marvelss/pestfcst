@@ -15,30 +15,31 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import lombok.Data;
 
-@Data
-@Document(collection = "feature_calculation_data")
-public class ModelBuildingDataSet {
-    @Id
-    private String id; // MongoDB的主键通常是String类型
-
-    @Field(name = "lon")
-    private float lon;
-
-    @Field(name = "lat")
-    private float lat;
-
-    @Field(name = "year")
-    private int year;
-
-    @Field(name = "doy")
-    private int doy;
-
-    @Field(name = "temp")
-    private float temp;
-
-    @Field(name = "rain")
-    private float rain;
-}
+//@Data
+//
+//@Document(collection = "feature_calculation_data")
+//public class ModelBuildingDataSet {
+//    @Id
+//    private String id; // MongoDB的主键通常是String类型
+//
+//    @Field(name = "lon")
+//    private float lon;
+//
+//    @Field(name = "lat")
+//    private float lat;
+//
+//    @Field(name = "year")
+//    private int year;
+//
+//    @Field(name = "doy")
+//    private int doy;
+//
+//    @Field(name = "temp")
+//    private float temp;
+//
+//    @Field(name = "rain")
+//    private float rain;
+//}
 
 
 

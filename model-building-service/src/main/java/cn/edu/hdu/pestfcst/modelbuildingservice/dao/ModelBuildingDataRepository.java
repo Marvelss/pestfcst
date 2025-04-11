@@ -5,18 +5,18 @@ package cn.edu.hdu.pestfcst.modelbuildingservice.dao;/*
  * @Description :
  */
 
-import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelBuildingDataSet;
+//import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelBuildingDataSet;
+import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelingRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+//
+//@Repository
+//public interface ModelBuildingDataRepository extends MongoRepository<ModelBuildingDataSet, String> {
+//    // Spring Data MongoDB 会自动实现这个方法
+//}
 
 @Repository
-public interface ModelBuildingDataRepository extends MongoRepository<ModelBuildingDataSet, String> {
-    // Spring Data MongoDB 会自动实现这个方法
+public interface ModelBuildingDataRepository extends JpaRepository<ModelingRecord, Long> {
+    // Spring Data JPA 会自动实现这个方法
 }
-
-//@Repository
-//public interface ModelBuildingDataRepository extends JpaRepository<ModelBuildingDataSet, Long> {
-//    // Spring Data JPA 会自动实现这个方法
-//}
