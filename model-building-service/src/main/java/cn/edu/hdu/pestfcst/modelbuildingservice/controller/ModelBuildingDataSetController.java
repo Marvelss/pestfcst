@@ -10,12 +10,10 @@ import cn.edu.hdu.pestfcst.modelbuildingservice.service.ModelBuildingDataSetServ
 import cn.edu.hdu.pestfcst.modelbuildingservice.service.impl.ModelBuildingDataSetServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/model-building-dataset")
@@ -23,20 +21,33 @@ public class ModelBuildingDataSetController {
     @Autowired
     private ModelBuildingDataSetService modelBuildingDataSetService;
 
-    @GetMapping("/model-train/{modelIdList}")
-    public ResponseEntity<String> modelTrain(@PathVariable List<String> modelIdList) {
-        for (String id : modelIdList) {
-//            ModelingRecord pestData = modelBuildingDataSetService.getModelBuildingRecordSetByID(id);
-//            测试数据
+    @PostMapping("/model-train")
+    public ResponseEntity<String> modelTrain(@RequestBody Map<String, Object> request) {
+        List<String> modelIds = (List<String>) request.get("modelIds"); // modelIds 现在是 String 类型
+        String model = (String) request.get("model");
+        Map<String, Object> modelParams = (Map<String, Object>) request.get("modelParams");
+        List<String> features = (List<String>) request.get("features");
+        String label = (String) request.get("label");
+        List<String> evaluationMetrics = (List<String>) request.get("evaluationMetrics");
+        String datasetSplitRatio = (String) request.get("datasetSplitRatio");
+        String modelStructure = (String) request.get("modelStructure");
+        System.out.println("----1----" + ModelBuildingDataSetController.class.getName() +
+                "----/model-building-dataset/model-train----接收API接口请求");
+        for (String modelId : modelIds) {
             ModelingRecord pestData = new ModelingRecord();
-            pestData.setModelId(Long.valueOf(id));
-            pestData.setModelMethod("SVM-Test");
-            pestData.setFeatureOptimizationId(Long.valueOf("666"));
-            System.out.println("----1----" + ModelBuildingDataSetController.class.getName() +
-                    "----Controller传入参数至Service" + "ID：" + id);
+            pestData.setModelId(modelId);
+            pestData.setModelMethod(model);
+            pestData.setModelMethodParam(modelParams.toString());
+            pestData.setFeatures(features.toString());
+            pestData.setLabel(label);
+            pestData.setEvaluationMetrics(evaluationMetrics.toString());
+            pestData.setDatasetSplitRatio(datasetSplitRatio);
+            pestData.setModelStructure(modelStructure);
+            System.out.println("发送子建模任务ID：" + modelId);
             modelBuildingDataSetService.buildModel(pestData);
         }
-        return ResponseEntity.ok("/model-train/{model-id-list}----success");
+        return ResponseEntity.ok("Model training tasks have been successfully submitted.");
+
     }
 
     @GetMapping("/send-message")

@@ -69,7 +69,7 @@ public class ModelBuildingDataSetServiceImpl implements ModelBuildingDataSetServ
 
 //        获取模型建模任务（MySQL）
 
-        Long modelId = modelingInfo.getModelId();
+        String modelId = modelingInfo.getModelId();
         String modelMethod = modelingInfo.getModelMethod();
         Double accuracy = 0.95; // 示例精度
         System.out.println("----2----" + ModelBuildingDataSetServiceImpl.class.getName() +
