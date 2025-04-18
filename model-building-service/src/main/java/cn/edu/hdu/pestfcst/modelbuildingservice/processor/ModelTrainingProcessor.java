@@ -8,7 +8,6 @@ package cn.edu.hdu.pestfcst.modelbuildingservice.processor;/*
 import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelingRecord;
 import cn.edu.hdu.pestfcst.modelbuildingservice.service.impl.ModelBuildingDataSetServiceImpl;
 import com.sun.rowset.internal.Row;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 

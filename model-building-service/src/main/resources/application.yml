@@ -3,13 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/pest_model_building?useSSL=false
-    username: root
+    url: jdbc:postgresql://localhost:5432/pest_model_building?useSSL=false
+    username: postgres
     password: 123456
-    driver-class-name: com.mysql.jdbc.Driver
-  data:
-    mongodb:
-      uri: mongodb://localhost/pest_model_building_data
+    driver-class-name: org.postgresql.Driver
   cloud:
     nacos:
       discovery:

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 
 
 @Service
@@ -21,7 +22,7 @@ public class ModelTrainingListener {
     private ModelBuildingDataSetServiceImpl modelTrainingService;
 
     @KafkaListener(topics = "model-building-tasks", groupId = "my-group")
-    public void receiveMessage(String message) {
+    public void receiveMessage(String message) throws IOException {
         System.out.println("----3----" + ModelTrainingListener.class.getName() +
                 "----receiveMessage()----kafka接收Service建模任务" + message);
         System.out.println("接收到建模任务,调用建模方法: " + message);
@@ -34,10 +35,9 @@ public class ModelTrainingListener {
     }
 
     @KafkaListener(topics = "model-building-results", groupId = "my-group")
-    public void onModelTrainingResult(String result) {
-        result = "71";
+    public void onModelTrainingResult(String result) throws IOException {
         System.out.println("----7----" + ModelTrainingListener.class.getName() +
-                "----onModelTrainingResult()----kafka接收Service建模结果" + "71");
+                "----onModelTrainingResult()----kafka接收Service建模结果" + result);
         modelTrainingService.saveBuildResult(result);
     }
 }
