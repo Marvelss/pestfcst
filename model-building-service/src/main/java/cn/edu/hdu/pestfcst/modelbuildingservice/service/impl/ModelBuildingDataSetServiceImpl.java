@@ -6,16 +6,22 @@ package cn.edu.hdu.pestfcst.modelbuildingservice.service.impl;/*
  */
 
 import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelingRecord;
-import cn.edu.hdu.pestfcst.modelbuildingservice.dao.ModelBuildingDataSetRepository;
 import cn.edu.hdu.pestfcst.modelbuildingservice.dao.ModelingRecordRepository;
 import cn.edu.hdu.pestfcst.modelbuildingservice.processor.ModelTrainingProcessor;
 import cn.edu.hdu.pestfcst.modelbuildingservice.service.ModelBuildingDataSetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -35,59 +41,75 @@ public class ModelBuildingDataSetServiceImpl implements ModelBuildingDataSetServ
 //    @Value("${redis.key.model.precision}")
 //    private String precisionKeyPattern;
 
-//
-//    @Override
-//    public List<ModelBuildingDataSet> getAllModelBuildingDataSets() {
-//        return modelBuildingDataRepository.findAll();
-//    }
 
-
-//    @Override
-//    public ModelBuildingDataSet getModelBuildingDataSetByID(String id) {
-//        return null;
-
-    /// /        return modelBuildingDataRepository.findById(id)
-    /// /                .orElseThrow(() -> new RuntimeException("Service-ModelBuildingDataSet not found with ID: " + id));
-//
-//    }
-//
     @Override
-    public void buildModel(ModelingRecord modelingInfo) {
-//        发送建模任务
-        // 使用 JPA 数据源
-        ModelingRecord record = modelBuildingDataRepository.findById("1").orElse(null);
-        System.out.println("使用 JPA 数据源");
-        System.out.println(record);
+    public void buildModel(String userID) {
 
-        // ①创建模型记录（PostgresSQL）
-        modelBuildingDataRepository.save(modelingInfo);
+//        构建用户ID获取任务清单
+//        modelingInfo.setModelStatus(1); // 设置模型状态为等待中
+//        ModelingRecord savedRecord = modelBuildingDataRepository.save(modelingInfo);
+//        System.out.println("建模任务已保存到数据库: " + savedRecord);
+        // 根据用户ID获取任务清单
+        Optional<ModelingRecord> optionalTaskList = modelBuildingDataRepository.findById(userID);
+//        List<ModelingRecord> taskList = optionalTaskList.orElseThrow(() -> new EXCEP("No modeling record found for user ID: " + userID));
+        //多个任务批量发送kafka消息？
 
         System.out.println("----2----" + ModelBuildingDataSetServiceImpl.class.getName() +
                 "----buildModel()----Service发送kafka建模任务");
         // 发送Kafka消息
-        sendMessage("model-building-tasks", modelingInfo);
+        sendMessage("model-building-tasks", optionalTaskList);
 
     }
 
-    public void executeModelTraining(String modelingInfo) throws IOException {
-
+    public void   executeModelTraining(String modelingInfo) throws IOException {
         System.out.println("----4----" + ModelBuildingDataSetServiceImpl.class.getName() +
                 "----executeModelTraining()----Service调用Processor开始模型训练");
 //        反序列化建模信息
         ModelingRecord tempModelingRecord = parseModelingRecord(modelingInfo);
 //        ②从数据库获取该任务，更新任务状态为运行中
+//        ModelingRecord record = modelBuildingDataRepository.findById(tempModelingRecord.getModelId())
+//                .orElseThrow(() -> new RuntimeException("ModelingRecord not found"));
+        tempModelingRecord.setModelStatus(2); // 假设状态2表示运行中
+        modelBuildingDataRepository.save(tempModelingRecord);
         // 执行模型训练
         System.out.println("************开始模型训练************");
         System.out.println(tempModelingRecord);
-        //  ③传入建模参数：1.输入数据2.特征3.标签4.数据集分配比例5.参数6.精度指标
-        String result = modelTrainingProcessor.trainSVMModel(modelingInfo);
-        System.out.println("************训练完成,获得结果************");
-        System.out.println(result);
+
+        JSONObject result = new JSONObject();
+
+        try {
+            //  ③传入建模参数：1.输入数据2.模型方法3.方法参数4.特征5.标签6.数据集分配比例7.精度指标
+            String dataPath = tempModelingRecord.getModelData(); // 输入数据路径
+            String modelName = tempModelingRecord.getModelMethod(); // 模型名称
+            String modelMethodParam = tempModelingRecord.getModelMethodParam(); // 模型参数
+            String featureCols = tempModelingRecord.getFeatures(); // 特征列
+            // 假设 featureCols 是一个以逗号分隔的字符串
+            List<String> featureArray = Arrays.asList(featureCols.split(","));
+            String labelCol = tempModelingRecord.getLabel(); // 标签列
+            String trainTestSplitRatio = tempModelingRecord.getDatasetSplitRatio(); // 数据集分配比例
+            String metricName = tempModelingRecord.getEvaluationMetrics(); // 精度指标
+
+
+            JSONObject trainResult = modelTrainingProcessor.trainModel(
+                    dataPath, modelName, modelMethodParam,
+                    featureArray, labelCol,
+                    trainTestSplitRatio,
+                    metricName);
+
+            result.put("msg", "模型训练成功！");
+            result.put("训练结果", trainResult);
+            result.put("success", true);
+
+        } catch (Exception e) {
+            result.put("msg", "模型训练失败: " + e.getMessage());
+            result.put("success", false);
+            // log.error("模型训练异常", e); // 可选日志
+        }
 
         // ④发送建模结果到 Kafka
         System.out.println("----6----" + ModelBuildingDataSetServiceImpl.class.getName() +
                 "----executeModelTraining()----Service发送kafka建模结果");
-        sendMessage("model-building-results", tempModelingRecord);
+        sendMessage("model-building-results", result.toJSONString());
     }
 
     @Override
@@ -105,14 +127,26 @@ public class ModelBuildingDataSetServiceImpl implements ModelBuildingDataSetServ
 
         // 保存更新后的记录
         modelBuildingDataRepository.save(existingRecord);
+
+//        // 缓存精度到Redis（防雪崩设计）
+//        String precisionKey = precisionKeyPattern
+//                .replace("{user_id}", modelRepo.findById(modelId).get().getUserId().toString())
+//                .replace("{model_name}", modelType);
+//        redisTemplate.opsForValue().set(precisionKey,
+//                JSON.toJSONString(Map.of(
+//                        "accuracy", accuracy,
+//                        "timestamp", System.currentTimeMillis()
+//                )),
+//                24 + new Random().nextInt(12), // 随机过期24-36小时
+//                TimeUnit.HOURS);
     }
 
 
-    public void sendMessage(String topic, ModelingRecord modelingInfo) {
+    public void sendMessage(String topic, Object message) {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString;
         try {
-            jsonString = objectMapper.writeValueAsString(modelingInfo);
+            jsonString = objectMapper.writeValueAsString(message);
         } catch (Exception e) {
             e.printStackTrace();
             return;

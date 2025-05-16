@@ -5,70 +5,116 @@ package cn.edu.hdu.pestfcst.modelbuildingservice.processor;/*
  * @Description : 模型训练
  */
 
-import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelingRecord;
-import cn.edu.hdu.pestfcst.modelbuildingservice.service.impl.ModelBuildingDataSetServiceImpl;
-import com.sun.rowset.internal.Row;
-import org.springframework.kafka.annotation.KafkaListener;
+import net.minidev.json.JSONObject;
+import org.apache.spark.ml.classification.LinearSVC;
+import org.apache.spark.ml.classification.LinearSVCModel;
+import org.apache.spark.ml.classification.RandomForestClassificationModel;
+import org.apache.spark.ml.classification.RandomForestClassifier;
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
+import org.apache.spark.ml.feature.VectorAssembler;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.util.List;
+
 
 @Service
 public class ModelTrainingProcessor {
-    //    @KafkaListener(topics = "model-building-tasks")
-    public String trainSVMModel(String message) {
-        System.out.println("----5----" + ModelTrainingProcessor.class.getName() +
-                "----trainSVMModel()----Processor接收Service执行模型训练" + message);
-//        // 获取优选特征（MongoDB）
-//        Query featureQuery = new Query(Criteria.where("taskId").is(optimizationTaskId));
-//        FeatureOptimizationData featureData = mongoTemplate.findOne(featureQuery, FeatureOptimizationData.class);
+    private static final SparkSession spark = SparkSession.builder()
+            .appName("ModelTrainingProcessor")
+            .master("local[*]") // 可替换为集群地址
+            .getOrCreate();
+
+    public JSONObject trainModel(String dataPath, String modelName, String modelMethodParam,
+                                 List<String> featureCols, String labelCol,
+                                 String trainTestSplitRatio,
+                                 String metricName) {
+        JSONObject result = new JSONObject();
+        try {
+            if (!"svm".equalsIgnoreCase(modelName)) {
+                throw new UnsupportedOperationException("仅支持 SVM 模型，目前传入类型: " + modelName);
+            }
+//            String[] featureCols = parseFeatureCols(featureCols);
+//            double[] trainTestSplitRatio = parseTrainTestSplitRatio(trainTestSplitRatio);
+
+            Dataset<Row> data = spark.read()
+                    .option("header", "true")
+                    .option("inferSchema", "true")
+                    .csv(dataPath);
+
+//            VectorAssembler assembler = new VectorAssembler()
+//                    .setInputCols(featureCols)
+//                    .setOutputCol("features");
+//            Dataset<Row> assembledData = assembler.transform(data)
+//                    .withColumnRenamed(labelCol, "label")
+//                    .select("features", "label");
 //
-//        // 获取训练数据（示例：Spark MLlib）
-//        Dataset<Row> dataset = spark.read()
-//                .format("mongo")
-//                .option("uri", "mongodb://host/db.preprocessed_data")
-//                .load()
-//                .selectExpr(featureData.getFeatureList().toArray(new String[0]));
-//
-//        // 模型训练（示例：XGBoost）
-//        XGBoostClassifier model = new XGBoostClassifier()
-//                .setLabelCol("label")
-//                .setFeaturesCol("features");
-//        XGBoostClassificationModel trainedModel = model.fit(dataset);
-//
-//        // 保存模型（MongoDB）
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        trainedModel.save(baos);
-//        MLModel mlModel = new MLModel();
-//        mlModel.setModelId(modelId);
-//        mlModel.setModelBytes(baos.toByteArray());
-//        mongoTemplate.save(mlModel);
-//
-//        // 评估精度（示例）
-//        Dataset<Row> predictions = trainedModel.transform(dataset);
-//        MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
-//                .setLabelCol("label")
-//                .setPredictionCol("prediction")
-//                .setMetricName("accuracy");
-//        Double accuracy = evaluator.evaluate(predictions);
-//
-//        // 更新记录（MySQL）
-//        modelRepo.updateStatusAndAccuracy(modelId, "COMPLETED", accuracy);
-//
-//        // 缓存精度到Redis（防雪崩设计）
-//        String precisionKey = precisionKeyPattern
-//                .replace("{user_id}", modelRepo.findById(modelId).get().getUserId().toString())
-//                .replace("{model_name}", modelType);
-//        redisTemplate.opsForValue().set(precisionKey,
-//                JSON.toJSONString(Map.of(
-//                        "accuracy", accuracy,
-//                        "timestamp", System.currentTimeMillis()
-//                )),
-//                24 + new Random().nextInt(12), // 随机过期24-36小时
-//                TimeUnit.HOURS);
-        return "OA=0.9";
+//            Dataset<Row>[] splits = assembledData.randomSplit(trainTestSplitRatio, 1234);
+//            Dataset<Row> trainData = splits[0];
+//            Dataset<Row> testData = splits[1];
+            Dataset<Row> trainData = null;
+            Dataset<Row> testData = null;
+            LinearSVC svm = new LinearSVC()
+                    .setMaxIter(100)
+                    .setRegParam(0.1)
+                    .setLabelCol("label")
+                    .setFeaturesCol("features");
+            LinearSVCModel model = svm.fit(trainData);
+
+            Dataset<Row> predictions = model.transform(testData);
+
+            MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
+                    .setLabelCol("label")
+                    .setPredictionCol("prediction")
+                    .setMetricName(metricName);
+
+            double accuracy = evaluator.evaluate(predictions);
+
+            saveModel(model, modelName);
+
+            result.put("msg", "模型训练完成");
+            result.put("模型准确率", accuracy);
+            result.put("success", true);
+
+        } catch (Exception e) {
+            result.put("msg", "模型训练失败：" + e.getMessage());
+            result.put("success", false);
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+
+    private String[] parseFeatureCols(String featureColsJson) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<String> featureColsList = objectMapper.readValue(featureColsJson, new TypeReference<List<String>>() {
+        });
+        return featureColsList.toArray(new String[0]);
+    }
+
+
+    private double[] parseTrainTestSplitRatio(String ratioStr) {
+        String[] parts = ratioStr.split(":");
+        double[] ratio = new double[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            ratio[i] = Double.parseDouble(parts[i]);
+        }
+        return ratio;
+    }
+
+    private void saveModel(LinearSVCModel model, String modelName) {
+        try {
+            String modelPath = "models/" + modelName;
+            model.write().overwrite().save(modelPath);
+            System.out.println("[模型保存成功] 路径: " + modelPath);
+        } catch (Exception e) {
+            System.err.println("[模型保存失败] " + e.getMessage());
+        }
     }
 }

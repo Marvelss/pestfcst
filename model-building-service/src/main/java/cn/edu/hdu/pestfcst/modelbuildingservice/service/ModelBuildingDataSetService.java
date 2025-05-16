@@ -14,7 +14,7 @@ public interface ModelBuildingDataSetService {
 
 //    List<ModelBuildingDataSet> getAllModelBuildingDataSets();
 
-    void buildModel(ModelingRecord modelingInfo);
+    void buildModel(String userID);
 
     void saveBuildResult(String result) throws IOException;
 
