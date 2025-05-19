@@ -97,13 +97,13 @@ public class ModelTrainingProcessorTest {
                 .getOrCreate();
 
         // Step 1: 加载数据
-        String dataPath = "hdfs://localhost:9000/data/input2.csv";
+        String dataPath = "hdfs://localhost:9000/data/input2-predict2.csv";
 
         Dataset<Row> data = spark.read()
                 .option("header", "true")
                 .option("inferSchema", "true")
                 .csv(dataPath);
-
+        data.show();
 //        // Step 2: 重命名中文列名（建议）
 //        Dataset<Row> data = rawData.withColumnRenamed("经度", "lon")
 //                .withColumnRenamed("纬度", "lat")

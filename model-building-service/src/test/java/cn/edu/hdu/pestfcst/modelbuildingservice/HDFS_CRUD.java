@@ -52,7 +52,7 @@ public class HDFS_CRUD {
     @Test
     public void testAddFileToHdfs() throws IOException {
         // 指定本地文件上传地址
-        Path src = new Path("E:/a_idea/projects/pestfcst/model-building-service/src/test/java/cn/edu/hdu/pestfcst/modelbuildingservice/input2.csv");
+        Path src = new Path("E:/a_idea/projects/pestfcst/model-building-service/src/test/java/cn/edu/hdu/pestfcst/modelbuildingservice/input2-predict2.csv");
         // 指定hdfs目录地址
         Path dst = new Path("/data");
 
