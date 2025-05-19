@@ -5,14 +5,18 @@ package cn.edu.hdu.pestfcst.modelbuildingservice.stream;/*
  * @Description : 模型训练任务消息监听
  */
 
+import cn.edu.hdu.pestfcst.modelbuildingservice.bean.ModelingRecord;
 import cn.edu.hdu.pestfcst.modelbuildingservice.service.impl.ModelBuildingDataSetServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
+import java.util.List;
 
 
 @Service
@@ -25,12 +29,13 @@ public class ModelTrainingListener {
     public void receiveMessage(String message) throws IOException {
         System.out.println("----3----" + ModelTrainingListener.class.getName() +
                 "----receiveMessage()----kafka接收Service建模任务" + message);
-        System.out.println("接收到建模任务,调用建模方法: " + message);
-        modelTrainingService.executeModelTraining(message);
-        try {
 
-        } catch (Exception e) {
-            logger.error("Failed to parse message: {}", message, e);
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<ModelingRecord> taskList = objectMapper.readValue(message, new TypeReference<List<ModelingRecord>>() {
+        });
+        for (ModelingRecord task : taskList) {
+            System.out.println("kafka接收到的任务" + objectMapper.writeValueAsString(task));
+            modelTrainingService.executeModelTraining(objectMapper.writeValueAsString(task));
         }
     }
 

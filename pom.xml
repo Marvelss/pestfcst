@@ -86,6 +86,12 @@
                 <artifactId>springfox-swagger-ui</artifactId>
                 <version>2.9.2</version>
             </dependency>
+            <!-- Jackson Datatype JSR310 for Java 8 Date/Time support -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>2.13.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

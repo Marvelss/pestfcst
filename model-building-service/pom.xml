@@ -104,7 +104,12 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
         </dependency>
-
+<!--        存储json字段数据到数据库-->
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>hibernate-types-52</artifactId>
+            <version>2.14.0</version> <!-- 推荐版本 -->
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

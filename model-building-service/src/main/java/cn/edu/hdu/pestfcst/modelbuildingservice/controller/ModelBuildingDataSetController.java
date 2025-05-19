@@ -28,9 +28,23 @@ public class ModelBuildingDataSetController {
     public ResponseEntity<String> modelTrain(@RequestBody Map<String, Object> request) {
         System.out.println("----1----" + ModelBuildingDataSetController.class.getName() +
                 "----/model-building-dataset/model-train----接收API接口请求");
-        modelBuildingDataSetService.buildModel("userID");
-        return ResponseEntity.ok("Model training tasks have been successfully submitted.");
 
+        // 提取 userId 参数
+        Object userIdObj = request.get("userId");
+        if (userIdObj == null) {
+            return ResponseEntity.badRequest().body("参数错误：缺少 userId");
+        }
+        Long userId;
+        try {
+            userId = Long.parseLong(userIdObj.toString());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("参数错误：userId 格式非法");
+        }
+
+        // 调用建模服务
+        modelBuildingDataSetService.buildModel(userId);
+
+        return ResponseEntity.ok("模型训练任务提交成功！");
     }
 
     @GetMapping("/send-message")
