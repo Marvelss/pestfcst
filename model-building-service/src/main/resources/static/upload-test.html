@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .upload-section h3 {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .progress {
+            margin-top: 10px;
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>文件上传测试页面</h1>
+        
+        <!-- 单文件上传 -->
+        <div class="upload-section">
+            <h3>单文件上传</h3>
+            <input type="file" id="singleFile" accept=".csv,.xlsx,.xls,.txt,.json,.xml">
+            <br>
+            <button onclick="uploadSingleFile()" id="singleUploadBtn">上传文件</button>
+            <div class="progress" id="singleProgress" style="display: none;">
+                <div class="progress-bar" id="singleProgressBar"></div>
+            </div>
+            <div id="singleResult"></div>
+        </div>
+
+        <!-- 多文件上传 -->
+        <div class="upload-section">
+            <h3>多文件上传</h3>
+            <input type="file" id="multipleFiles" multiple accept=".csv,.xlsx,.xls,.txt,.json,.xml">
+            <br>
+            <button onclick="uploadMultipleFiles()" id="multipleUploadBtn">批量上传</button>
+            <div class="progress" id="multipleProgress" style="display: none;">
+                <div class="progress-bar" id="multipleProgressBar"></div>
+            </div>
+            <div id="multipleResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8092';
+
+        function showResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'result ' + (isSuccess ? 'success' : 'error');
+        }
+
+        function showProgress(elementId, barId, show = true) {
+            const progressElement = document.getElementById(elementId);
+            const barElement = document.getElementById(barId);
+            if (show) {
+                progressElement.style.display = 'block';
+                barElement.style.width = '0%';
+            } else {
+                progressElement.style.display = 'none';
+            }
+        }
+
+        function updateProgress(barId, percent) {
+            const barElement = document.getElementById(barId);
+            barElement.style.width = percent + '%';
+        }
+
+        async function uploadSingleFile() {
+            const fileInput = document.getElementById('singleFile');
+            const button = document.getElementById('singleUploadBtn');
+            
+            if (!fileInput.files[0]) {
+                showResult('singleResult', '请选择要上传的文件', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            button.disabled = true;
+            showProgress('singleProgress', 'singleProgressBar', true);
+            showResult('singleResult', '正在上传...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/model-building-dataset/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('singleResult', `上传成功！\n文件名: ${result.fileName}\n文件大小: ${result.fileSize} bytes\n保存路径: ${result.savedPath}\n上传时间: ${result.uploadTime}`);
+                } else {
+                    showResult('singleResult', `上传失败: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult('singleResult', `上传失败: ${error.message}`, false);
+            } finally {
+                button.disabled = false;
+                showProgress('singleProgress', 'singleProgressBar', false);
+            }
+        }
+
+        async function uploadMultipleFiles() {
+            const fileInput = document.getElementById('multipleFiles');
+            const button = document.getElementById('multipleUploadBtn');
+            
+            if (!fileInput.files.length) {
+                showResult('multipleResult', '请选择要上传的文件', false);
+                return;
+            }
+
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
+
+            button.disabled = true;
+            showProgress('multipleProgress', 'multipleProgressBar', true);
+            showResult('multipleResult', '正在批量上传...');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/model-building-dataset/upload-multiple`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    let resultText = `批量上传完成！\n总文件数: ${result.totalFiles}\n成功: ${result.successCount}\n失败: ${result.failCount}\n上传时间: ${result.uploadTime}\n\n详细结果:\n`;
+                    
+                    result.uploadResults.forEach((fileResult, index) => {
+                        resultText += `${index + 1}. ${fileResult.fileName}: ${fileResult.status}\n`;
+                        if (fileResult.status === 'success') {
+                            resultText += `   大小: ${fileResult.fileSize} bytes\n   路径: ${fileResult.savedPath}\n`;
+                        } else {
+                            resultText += `   错误: ${fileResult.error}\n`;
+                        }
+                    });
+                    
+                    showResult('multipleResult', resultText);
+                } else {
+                    showResult('multipleResult', `批量上传失败: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult('multipleResult', `批量上传失败: ${error.message}`, false);
+            } finally {
+                button.disabled = false;
+                showProgress('multipleProgress', 'multipleProgressBar', false);
+            }
+        }
+    </script>
+</body>
+</html> 
