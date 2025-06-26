@@ -14,9 +14,12 @@ public class RouterConfig {
                 // API网关健康检查路径
                 .route("gateway-health", r -> r.path("/api/health")
                         .filters(f -> f.rewritePath("/api/health", "/gateway/status"))
-                        .uri("lb://gateway-service"))
+                        .uri("http://localhost:8080"))
                 
-                // 在这里可以添加更多的路由配置
+                // 特征优化服务路由
+                .route("feature-optimization", r -> r.path("/api/feature/**")
+                        .filters(f -> f.rewritePath("/api/feature/(?<segment>.*)", "/${segment}"))
+                        .uri("http://localhost:8091"))
                 
                 .build();
     }

@@ -9,11 +9,6 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-  cloud:
-    nacos:
-      discovery:
-        service: feature-optimization-service
-        server-addr: localhost:8848
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
@@ -26,6 +21,15 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:

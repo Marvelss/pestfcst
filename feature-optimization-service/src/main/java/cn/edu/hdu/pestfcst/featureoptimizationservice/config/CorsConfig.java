@@ -11,17 +11,23 @@ public class CorsConfig {
 
     @Bean
     public CorsFilter corsFilter() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        // 允许所有域名进行跨域调用
-        corsConfiguration.addAllowedOriginPattern("*");
-        // 允许跨越发送cookie
-        corsConfiguration.setAllowCredentials(true);
-        // 放行全部原始头信息
-        corsConfiguration.addAllowedHeader("*");
-        // 允许所有请求方法跨域调用
-        corsConfiguration.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
+        CorsConfiguration config = new CorsConfiguration();
+        
+        // 允许跨域的头部信息
+        config.addAllowedHeader("*");
+        // 允许跨域的方法
+        config.addAllowedMethod("*");
+        // 可访问的外域请求
+        config.addAllowedOrigin("*");
+        // 允许携带cookie跨域
+        config.setAllowCredentials(true);
+        // 暴露头部信息
+        config.addExposedHeader("Authorization");
+        
+        // 添加映射路径，拦截一切请求
+        source.registerCorsConfiguration("/**", config);
+        
         return new CorsFilter(source);
     }
 } 
