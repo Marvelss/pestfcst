@@ -2,21 +2,43 @@ server:
   port: 8091
 
 spring:
+  application:
+    name: feature-optimization-service
   datasource:
-    url: jdbc:mysql://localhost:3306/cloud_order?useSSL=false
+    url: jdbc:mysql://localhost:3306/pestfcst?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: 123456
-    driver-class-name: com.mysql.jdbc.Driver
-  cloud:
-    nacos:
-      discovery:
-        service: feature-optimization-service
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
-    com.example: debug
+    cn.edu.hdu.pestfcst: debug
+    org.springframework.web: info
+    org.hibernate: error
   pattern:
     dateformat: yyyy-MM-dd HH:mm:ss.SSS
 
-
+# 上传文件存储路径
+upload:
+  path: ./uploads/

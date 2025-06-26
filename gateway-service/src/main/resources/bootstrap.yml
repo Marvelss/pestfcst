@@ -1,9 +1,0 @@
-spring:
-  application:
-    name: gateway-service
-  cloud:
-    nacos:
-      server-addr: localhost:8848
-      config:
-        enabled: true
-        file-extension: yaml
