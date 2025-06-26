@@ -11,13 +11,22 @@ import cn.edu.hdu.pestfcst.modelbuildingservice.processor.ModelTrainingProcessor
 import cn.edu.hdu.pestfcst.modelbuildingservice.service.ModelBuildingDataSetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.kafka.core.KafkaTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -30,12 +39,18 @@ public class ModelBuildingDataSetServiceImpl implements ModelBuildingDataSetServ
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    // 文件上传配置
+    @Value("${file.upload.path:uploads}")
+    private String uploadPath;
+
+    @Value("${file.upload.max-size:10485760}")
+    private long maxFileSize; // 默认10MB
+
 //    @Autowired
 //    private RedisTemplate<String, String> redisTemplate;
 
 //    @Value("${redis.key.model.precision}")
 //    private String precisionKeyPattern;
-
 
     @Override
     public void buildModel(Long userId) {
@@ -144,6 +159,121 @@ public class ModelBuildingDataSetServiceImpl implements ModelBuildingDataSetServ
 //                TimeUnit.HOURS);
     }
 
+    @Override
+    public String saveUploadedFile(MultipartFile file) throws IOException {
+        System.out.println("----文件保存----" + ModelBuildingDataSetServiceImpl.class.getName() +
+                "----saveUploadedFile()----开始保存上传文件: " + file.getOriginalFilename());
+
+        // 1. 验证文件
+        validateFile(file);
+
+        // 2. 创建上传目录
+        String uploadDir = createUploadDirectory();
+
+        // 3. 生成唯一文件名
+        String fileName = generateUniqueFileName(file.getOriginalFilename());
+
+        // 4. 构建完整文件路径
+        Path filePath = Paths.get(uploadDir, fileName);
+
+        // 5. 保存文件
+        try {
+            Files.copy(file.getInputStream(), filePath);
+            System.out.println("文件保存成功: " + filePath.toString());
+            return filePath.toString();
+        } catch (IOException e) {
+            System.err.println("文件保存失败: " + e.getMessage());
+            throw new IOException("文件保存失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 验证上传的文件
+     * @param file 上传的文件
+     * @throws IOException 验证失败时抛出异常
+     */
+    private void validateFile(MultipartFile file) throws IOException {
+        // 检查文件是否为空
+        if (file.isEmpty()) {
+            throw new IOException("上传的文件为空");
+        }
+
+        // 检查文件大小
+        if (file.getSize() > maxFileSize) {
+            throw new IOException("文件大小超过限制，最大允许: " + (maxFileSize / 1024 / 1024) + "MB");
+        }
+
+        // 检查文件扩展名（可选，根据业务需求调整）
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            String extension = getFileExtension(originalFilename);
+            String[] allowedExtensions = {".csv", ".xlsx", ".xls", ".txt", ".json", ".xml"};
+            boolean isValidExtension = false;
+            for (String allowedExt : allowedExtensions) {
+                if (allowedExt.equalsIgnoreCase(extension)) {
+                    isValidExtension = true;
+                    break;
+                }
+            }
+            if (!isValidExtension) {
+                throw new IOException("不支持的文件类型: " + extension + "，支持的类型: " + String.join(", ", allowedExtensions));
+            }
+        }
+    }
+
+    /**
+     * 创建上传目录
+     * @return 上传目录路径
+     * @throws IOException 目录创建失败时抛出异常
+     */
+    private String createUploadDirectory() throws IOException {
+        // 创建按日期分组的目录结构
+        String dateDir = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String fullUploadDir = uploadPath + File.separator + dateDir;
+
+        Path uploadDirPath = Paths.get(fullUploadDir);
+        if (!Files.exists(uploadDirPath)) {
+            try {
+                Files.createDirectories(uploadDirPath);
+                System.out.println("创建上传目录: " + uploadDirPath.toString());
+            } catch (IOException e) {
+                throw new IOException("创建上传目录失败: " + e.getMessage(), e);
+            }
+        }
+
+        return fullUploadDir;
+    }
+
+    /**
+     * 生成唯一文件名
+     * @param originalFilename 原始文件名
+     * @return 唯一文件名
+     */
+    private String generateUniqueFileName(String originalFilename) {
+        String extension = getFileExtension(originalFilename);
+        String baseName = originalFilename != null ? 
+            originalFilename.substring(0, originalFilename.lastIndexOf('.')) : "file";
+        
+        // 生成UUID作为唯一标识
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        
+        // 添加时间戳
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
+        
+        return baseName + "_" + timestamp + "_" + uuid + extension;
+    }
+
+    /**
+     * 获取文件扩展名
+     * @param filename 文件名
+     * @return 文件扩展名（包含点号）
+     */
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.lastIndexOf('.') == -1) {
+            return "";
+        }
+        return filename.substring(filename.lastIndexOf('.')).toLowerCase();
+    }
 
     public void sendMessage(String topic, Object message) {
         ObjectMapper objectMapper = new ObjectMapper();
