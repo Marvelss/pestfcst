@@ -8,4 +8,6 @@ spring:
       server-addr: localhost:8848
       config:
         enabled: true
-        file-extention: yaml
+        file-extension: yaml
+        namespace: public
+        group: DEFAULT_GROUP
