@@ -19,3 +19,22 @@ spring:
           uri: lb://model-building-service
           predicates:
             - Path=/model-building-dataset/**
+        - id: data-management-service
+          uri: lb://data-management-service
+          predicates:
+            - Path=/spatial-dataset/**
+        - id: preprocessing-service
+          uri: lb://preprocessing-service
+          predicates:
+            - Path=/preprocessing/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"

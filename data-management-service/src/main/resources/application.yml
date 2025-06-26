@@ -1,0 +1,33 @@
+server:
+  port: 10020
+
+spring:
+  application:
+    name: data-management-service
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/pestfcst?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        service: data-management-service
+
+# HDFS配置
+hdfs:
+  uri: hdfs://localhost:9000
+  user: hadoop
+  basePath: /pest-data
+
+# 文件上传配置
+file:
+  upload:
+    tempDir: D:/temp/pestfcst/upload
+    maxSize: 100MB
+    allowedExtensions: .csv,.tif,.shp,.dbf,.shx,.prj,.geojson 
