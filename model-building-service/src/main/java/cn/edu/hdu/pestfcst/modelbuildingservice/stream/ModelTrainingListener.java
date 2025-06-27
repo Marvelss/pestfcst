@@ -10,7 +10,6 @@ import cn.edu.hdu.pestfcst.modelbuildingservice.service.impl.ModelBuildingDataSe
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -25,24 +24,24 @@ public class ModelTrainingListener {
     @Autowired
     private ModelBuildingDataSetServiceImpl modelTrainingService;
 
-    @KafkaListener(topics = "model-building-tasks", groupId = "my-group")
-    public void receiveMessage(String message) throws IOException {
+    // 移除了Kafka监听器，改为普通方法
+    public void processModelTrainingTask(String message) throws IOException {
         System.out.println("----3----" + ModelTrainingListener.class.getName() +
-                "----receiveMessage()----kafka接收Service建模任务" + message);
+                "----processModelTrainingTask()----处理建模任务" + message);
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<ModelingRecord> taskList = objectMapper.readValue(message, new TypeReference<List<ModelingRecord>>() {
         });
         for (ModelingRecord task : taskList) {
-            System.out.println("kafka接收到的任务" + objectMapper.writeValueAsString(task));
+            System.out.println("接收到的任务" + objectMapper.writeValueAsString(task));
             modelTrainingService.executeModelTraining(objectMapper.writeValueAsString(task));
         }
     }
 
-    @KafkaListener(topics = "model-building-results", groupId = "my-group")
-    public void onModelTrainingResult(String result) throws IOException {
+    // 移除了Kafka监听器，改为普通方法
+    public void processModelTrainingResult(String result) throws IOException {
         System.out.println("----7----" + ModelTrainingListener.class.getName() +
-                "----onModelTrainingResult()----kafka接收Service建模结果" + result);
+                "----processModelTrainingResult()----处理建模结果" + result);
         modelTrainingService.saveBuildResult(result);
     }
 }
