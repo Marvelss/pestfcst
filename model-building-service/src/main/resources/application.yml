@@ -1,113 +1,29 @@
 server:
   port: 8092
-  servlet:
-    context-path: /
 
 spring:
-  application:
-    name: model-building-service
-  
-  # 数据库配置
   datasource:
-    url: jdbc:postgresql://localhost:5432/pest_model_building?useSSL=false&serverTimezone=UTC
-    username: postgres
-    password: 123456
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-  
-  # JPA配置
+    url: jdbc:mysql://localhost:3306/pest_model_building?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: 060313yyl
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        use_sql_comments: true
-  
-  # 文件上传配置
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 10MB
-      max-request-size: 50MB
-      file-size-threshold: 2KB
-      location: ${java.io.tmpdir}
-  
-  # 云配置
-  cloud:
-    nacos:
-      discovery:
-        service: model-building-service
-        server-addr: localhost:8848
-        namespace: public
-        group: DEFAULT_GROUP
-  
-  # Kafka配置
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: model-building-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
 
-# 自定义文件上传配置
-file:
-  upload:
-    path: uploads
-    max-size: 10485760  # 10MB in bytes
-    allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,txt,csv,zip,rar
-    temp-dir: ${java.io.tmpdir}/file-upload
-
-# 日志配置
 logging:
   level:
-    cn.edu.hdu.pestfcst: debug
-    org.springframework.web: debug
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    com.example: debug
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/model-building-service.log
-    max-size: 10MB
-    max-history: 30
+    dateformat: yyyy-MM-dd HH:mm:ss.SSS
 
-# 管理端点配置
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: always
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-
-# 跨域配置
-cors:
-  allowed-origins: "*"
-  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-  allowed-headers: "*"
-  allow-credentials: true
-  max-age: 3600
+# 添加hdfs配置，禁用HDFS功能
+hdfs:
+  enabled: false
 
 

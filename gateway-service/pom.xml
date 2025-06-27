@@ -70,10 +70,15 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>cn.edu.hdu.pestfcst.gatewayservice.GatewayServiceApplication</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>repackage</id>
                         <goals>
                             <goal>repackage</goal>
                         </goals>

@@ -107,6 +107,8 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <!-- 注释掉父POM的Spring Boot Maven插件，让子模块各自配置 -->
+            <!-- 
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -124,6 +126,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 

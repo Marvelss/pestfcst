@@ -23,8 +23,7 @@ import org.hibernate.annotations.TypeDefs;
 @Entity
 @Table(name = "modeling_tasks")
 @TypeDefs({
-        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
-        @TypeDef(name = "string-array", typeClass = StringArrayType.class)
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 })
 public class ModelingRecord {
     @Id
@@ -45,18 +44,17 @@ public class ModelingRecord {
     private String modelMethodName;
 
     @Type(type = "jsonb")
-    @Column(name = "model_method_param", columnDefinition = "jsonb")
+    @Column(name = "model_method_param", columnDefinition = "json")
     private JsonNode modelMethodParam;
 
-    @Type(type = "string-array")
-    @Column(name = "features", columnDefinition = "text[]")
-    private String[] features;
+    @Column(name = "features", columnDefinition = "TEXT")
+    private String features; // 存储为JSON字符串
 
     @Column(name = "label", nullable = false)
     private String label;
 
     @Type(type = "jsonb")
-    @Column(name = "evaluation_metrics", columnDefinition = "jsonb")
+    @Column(name = "evaluation_metrics", columnDefinition = "json")
     private JsonNode evaluationMetrics;
 
     @Column(name = "dataset_split_ratio")
